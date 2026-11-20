@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ja"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><title>Step Up and Have Fun p110~p111 | Interview Practice</title><style>
+:root{color-scheme:dark;--bg:#101629;--card:#1d2940;--ink:#f5f8ff;--muted:#c4d1e7;--accent:#7ec8ff}*{box-sizing:border-box}body{margin:0;background:linear-gradient(145deg,#101629,#1b3150);color:var(--ink);font-family:system-ui,-apple-system,'Noto Sans JP',sans-serif;line-height:1.7;padding:22px}.wrap{max-width:850px;margin:auto}header{margin:16px 0 25px}h1{font-size:clamp(24px,5vw,36px);margin:0}h2{font-size:22px;margin:0 0 12px}.sub{color:var(--muted)}.card{background:var(--card);border:1px solid #40516d;border-radius:18px;padding:24px;margin:18px 0;box-shadow:0 10px 30px #0002}.passage{font-size:clamp(19px,3vw,24px);line-height:1.9}.question{font-size:20px;font-weight:650}button{font:inherit;font-weight:700;color:#07192b;background:var(--accent);border:0;border-radius:11px;padding:10px 17px;cursor:pointer;margin:5px 7px 5px 0}button.secondary{background:#d6e1f3}button:focus-visible{outline:3px solid #fff;outline-offset:3px}.answer{background:#10263c;border-left:4px solid #80dfb6;padding:13px 16px;border-radius:8px;margin-top:12px}.hidden{display:none}.controls{display:flex;flex-wrap:wrap;align-items:center;gap:8px}.small{font-size:14px;color:var(--muted)}label{font-weight:600}select{font:inherit;border-radius:8px;padding:8px;background:#fff;color:#15233a}.slash{color:#a9d9ff;font-size:18px;margin-top:12px}.divider{border-top:1px solid #44556f;margin:18px 0}@media(max-width:550px){.card{padding:17px}button{width:100%;margin:5px 0}}
+</style></head><body><main class="wrap"><header><h1>Step Up and Have Fun p110~p111</h1><div class="sub">英検3級 面接練習 | Interview Test Practice</div></header><section class="card"><h2>音声練習の設定</h2><div class="controls"><label for="voice">英語の声</label><select aria-label="英語音声の選択" id="voice"><option value="">音声を確認中…</option></select><label for="rate">読み上げ速度</label><select id="rate"><option selected="" value="0.75">ゆっくり (0.75×) ★ 基本設定</option><option value="0.9">少しゆっくり (0.9×)</option><option value="1">普通 (1.0×)</option></select><button class="secondary" id="stop">■ 停止</button></div><p class="small">通常速度の75%で読み上げます。Google US Englishなどの音声が利用可能なら優先します。端末にない場合は別の英語音声を使用します。</p></section><section class="card"><h2>Studying at the Library</h2><div class="passage" id="passage">Many students go to the library after school. They read books and do their homework there. The library is quiet and comfortable, so it is a good place to study.</div><p class="small">comfortable = 快適な</p><button data-speak="passage">▶ パッセージを1回聞く</button><button aria-expanded="false" class="secondary" id="slashBtn">スラッシュリーディングを表示</button><div class="slash hidden" id="slash">Many students / go to the library / after school.<br/>They read books / and do their homework / there.<br/>The library is quiet and comfortable, / so it is a good place / to study.</div></section><section class="card"><h2>Interview Questions</h2><p class="small">まず声に出して答えてから、「答えを見る」を押しましょう。</p><div><div class="question">1. Why is the library a good place to study?</div><button data-speak="q1">▶ 質問を1回聞く</button><button aria-expanded="false" class="secondary" data-answer="a1">答えを見る</button><div class="answer hidden" id="a1"><strong>Answer:</strong> Because it is quiet and comfortable.<br/><span class="small">静かで快適だからです。</span><div><button data-speak="a1">▶ 答えを1回聞く</button></div></div></div><div class="divider"></div><div><div class="question">2. What do many students do in the library?</div><button data-speak="q2">▶ 質問を1回聞く</button><button aria-expanded="false" class="secondary" data-answer="a2">答えを見る</button><div class="answer hidden" id="a2"><strong>Answer:</strong> They read books and do their homework.<br/><span class="small">本を読んだり、宿題をしたりします。</span><div><button data-speak="a2">▶ 答えを1回聞く</button></div></div></div></section></main><script>
+const lines = {
+  passage: 'Many students go to the library after school. They read books and do their homework there. The library is quiet and comfortable, so it is a good place to study.',
+  q1: 'Why is the library a good place to study?',
+  q2: 'What do many students do in the library?',
+  a1: 'Because it is quiet and comfortable.',
+  a2: 'They read books and do their homework.'
+};
+const synth = window.speechSynthesis;
+const voiceSelect = document.getElementById('voice');
+let queue = [], englishVoices = [], playSequence = 0;
+function voicePriority(v) {
+  const n = v.name.toLowerCase();
+  if (/google us english/.test(n) && /(female|woman)/.test(n)) return 0;
+  if (/google us english/.test(n) && !/male/.test(n)) return 1;
+  if (/google/.test(n) && /female/.test(n) && v.lang === 'en-US') return 2;
+  if (/google/.test(n) && v.lang === 'en-US') return 3;
+  if (/(samantha|ava|allison|victoria|zira|jenny|aria)/.test(n) && v.lang === 'en-US') return 4;
+  if (v.lang === 'en-US') return 5;
+  return 6;
+}
+function populateVoices() {
+  if (!synth) return;
+  const previousVoice = englishVoices[Number(voiceSelect.value)];
+  englishVoices = synth.getVoices().filter(v => /^en(-|_)/i.test(v.lang));
+  englishVoices.sort((a,b) => voicePriority(a) - voicePriority(b));
+  voiceSelect.replaceChildren();
+  if (!englishVoices.length) {
+    voiceSelect.add(new Option('端末の英語音声を確認中…', ''));
+    return;
+  }
+  englishVoices.forEach((v,i) => {
+    voiceSelect.add(new Option(v.name + ' (' + v.lang + ')' + (i === 0 ? ' ★ おすすめ' : ''), String(i)));
+  });
+  const previous = englishVoices.findIndex(v => previousVoice && v.voiceURI === previousVoice.voiceURI);
+  voiceSelect.value = String(previous >= 0 ? previous : 0);
+}
+if (synth) {
+  populateVoices();
+  synth.addEventListener?.('voiceschanged', populateVoices);
+}
+function stop() {
+  playSequence++;
+  queue = [];
+  if (synth) synth.cancel();
+}
+function speak(keys) {
+  stop();
+  queue = [...keys];
+  const sequence = playSequence;
+  next(sequence);
+}
+function next(sequence) {
+  if (sequence !== playSequence || !queue.length) return;
+  if (!synth) {
+    alert('ブラウザの音声読み上げ機能を利用できません。読み上げ対応ブラウザをお使いください。');
+    return;
+  }
+  const key = queue.shift();
+  const utter = new SpeechSynthesisUtterance(lines[key]);
+  utter.lang = 'en-US';
+  utter.rate = Number(document.getElementById('rate').value);
+  const voice = englishVoices[Number(voiceSelect.value)];
+  if (voice) utter.voice = voice;
+  utter.onend = () => { if (sequence === playSequence) next(sequence); };
+  utter.onerror = () => { if (sequence === playSequence) queue = []; };
+  synth.speak(utter);
+}
+document.querySelectorAll('[data-speak]').forEach(b => b.addEventListener('click', () => speak([b.dataset.speak])));
+document.getElementById('stop').addEventListener('click', stop);
+document.querySelectorAll('[data-answer]').forEach(b => b.addEventListener('click', () => {
+  const el = document.getElementById(b.dataset.answer);
+  const opening = el.classList.contains('hidden');
+  el.classList.toggle('hidden');
+  b.textContent = opening ? '答えを隠す' : '答えを見る';
+  b.setAttribute('aria-expanded', String(opening));
+}));
+document.getElementById('slashBtn').addEventListener('click', e => {
+  const el = document.getElementById('slash');
+  const opening = el.classList.contains('hidden');
+  el.classList.toggle('hidden');
+  e.currentTarget.textContent = opening ? 'スラッシュを隠す' : 'スラッシュリーディングを表示';
+  e.currentTarget.setAttribute('aria-expanded', String(opening));
+});
+</script></body></html>
